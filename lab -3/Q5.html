@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    .stage { display: none; margin-bottom: 20px; }
+    .active { display: block; }
+    input { display: block; margin: 5px 0 10px 0; padding: 6px; width: 300px; }
+    button { padding: 6px 12px; margin: 5px; }
+    .error { color: red; font-size: 12px; }
+    #progressBarContainer {
+      width: 100%; background-color: #ccc; height: 20px; margin-bottom: 20px;
+    }
+    #progressBar {
+      width: 0%; height: 100%; background-color: #4caf50;
+      text-align: center; color: white; line-height: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h2> Form</h2>
+
+<div id="progressBarContainer">
+  <div id="progressBar">0%</div>
+</div>
+
+<form id="multiStageForm">
+  <!-- Stage 1 -->
+  <div class="stage active" id="stage0">
+    <h3>Stage 1: Personal Info</h3>
+    <label>Name *</label>
+    <input type="text" id="name">
+    <span class="error" id="err_name"></span>
+    
+    <label>Email *</label>
+    <input type="email" id="email">
+    <span class="error" id="err_email"></span>
+    
+    <button type="button" onclick="nextStage()">Next</button>
+  </div>
+
+  <!-- Stage 2 -->
+  <div class="stage" id="stage1">
+    <h3>Stage 2: Account Info</h3>
+    <label>Password *</label>
+    <input type="password" id="password">
+    <span class="error" id="err_password"></span>
+    
+    <label>Confirm Password *</label>
+    <input type="password" id="confirmPassword">
+    <span class="error" id="err_confirmPassword"></span>
+    
+    <button type="button" onclick="prevStage()">Previous</button>
+    <button type="button" onclick="nextStage()">Next</button>
+  </div>
+
+  <!-- Stage 3 -->
+  <div class="stage" id="stage2">
+    <h3>Stage 3: Profile</h3>
+    <label>Age *</label>
+    <input type="number" id="age">
+    <span class="error" id="err_age"></span>
+    
+    <label>Gender *</label>
+    <select id="gender">
+      <option value="">Select</option>
+      <option>Male</option>
+      <option>Female</option>
+      <option>Other</option>
+    </select>
+    <span class="error" id="err_gender"></span>
+    
+    <button type="button" onclick="prevStage()">Previous</button>
+    <button type="button" onclick="nextStage()">Next</button>
+  </div>
+
+  <!-- Stage 4 -->
+  <div class="stage" id="stage3">
+    <h3>Stage 4: Preferences</h3>
+    <label>Subscribe to Newsletter?</label>
+    <input type="checkbox" id="newsletter">
+    
+    <label>Favorite Color</label>
+    <input type="text" id="color">
+    
+    <button type="button" onclick="prevStage()">Previous</button>
+    <button type="submit">Submit</button>
+  </div>
+</form>
+
+<script>
+let currentStage = 0;
+const totalStages = 4;
+const formData = {};
+
+function showStage(index) {
+  for (let i = 0; i < totalStages; i++) {
+    document.getElementById("stage" + i).classList.remove("active");
+  }
+  document.getElementById("stage" + index).classList.add("active");
+  updateProgressBar(index);
+}
+
+function updateProgressBar(index) {
+  const percent = ((index + 1) / totalStages) * 100;
+  const bar = document.getElementById("progressBar");
+  bar.style.width = percent + "%";
+  bar.innerText = Math.round(percent) + "%";
+}
+
+function validateStage(index) {
+  let valid = true;
+
+  if (index === 0) {
+    const name = document.getElementById("name").value.trim();
+    const email = document.getElementById("email").value.trim();
+    document.getElementById("err_name").innerText = name ? "" : "Required";
+    document.getElementById("err_email").innerText = email ? "" : "Required";
+    if (!name || !email) valid = false;
+    formData.name = name;
+    formData.email = email;
+  }
+
+  if (index === 1) {
+    const pass = document.getElementById("password").value;
+    const confirm = document.getElementById("confirmPassword").value;
+    document.getElementById("err_password").innerText = pass.length >= 6 ? "" : "Min 6 chars";
+    document.getElementById("err_confirmPassword").innerText = (pass === confirm) ? "" : "Passwords do not match";
+    if (pass.length < 6 || pass !== confirm) valid = false;
+    formData.password = pass;
+  }
+
+  if (index === 2) {
+    const age = document.getElementById("age").value;
+    const gender = document.getElementById("gender").value;
+    document.getElementById("err_age").innerText = age ? "" : "Required";
+    document.getElementById("err_gender").innerText = gender ? "" : "Required";
+    if (!age || !gender) valid = false;
+    formData.age = age;
+    formData.gender = gender;
+  }
+
+  if (index === 3) {
+    formData.newsletter = document.getElementById("newsletter").checked;
+    formData.color = document.getElementById("color").value.trim();
+  }
+
+  return valid;
+}
+
+function nextStage() {
+  if (validateStage(currentStage)) {
+    currentStage = Math.min(currentStage + 1, totalStages - 1);
+    showStage(currentStage);
+  }
+}
+
+function prevStage() {
+  currentStage = Math.max(currentStage - 1, 0);
+  showStage(currentStage);
+}
+
+document.getElementById("multiStageForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  if (validateStage(currentStage)) {
+    alert("Form submitted successfully!\n" + JSON.stringify(formData, null, 2));
+    this.reset();
+    currentStage = 0;
+    showStage(currentStage);
+  }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #log { border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: scroll; margin-top: 10px; }
+    .warning { color: red; font-weight: bold; }
+    button { margin-top: 10px; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+
+<h2>User Activity Monitor</h2>
+<p>Interact with the page: click, type, or switch focus to see real-time logging.</p>
+
+<div id="log"></div>
+
+<button onclick="resetLog()">Reset Log</button>
+<button onclick="exportLog()">Export Log</button>
+
+<script>
+let activityLog = [];
+const logDiv = document.getElementById("log");
+const clickThreshold = 10;
+let clickCount = 0;
+
+function logActivity(type, target) {
+  const time = new Date().toLocaleTimeString();
+  const entry = { type, target: target.tagName, time };
+  activityLog.push(entry);
+
+  const div = document.createElement("div");
+  div.innerText = `[${time}] ${type} on <${target.tagName}>`;
+  logDiv.appendChild(div);
+  logDiv.scrollTop = logDiv.scrollHeight;
+
+  if (type === "click") {
+    clickCount++;
+    if (clickCount > clickThreshold) {
+      const warn = document.createElement("div");
+      warn.className = "warning";
+      warn.innerText = `⚠️ High number of clicks detected!`;
+      logDiv.appendChild(warn);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+  }
+}
+
+document.body.addEventListener("click", function(e) {
+  logActivity("click", e.target);
+}, true);
+
+document.body.addEventListener("keydown", function(e) {
+  logActivity(`key press (${e.key})`, e.target);
+}, true);
+
+document.body.addEventListener("focusin", function(e) {
+  logActivity("focus in", e.target);
+}, true);
+
+document.body.addEventListener("focusout", function(e) {
+  logActivity("focus out", e.target);
+}, true);
+
+function resetLog() {
+  activityLog = [];
+  clickCount = 0;
+  logDiv.innerHTML = "";
+}
+
+function exportLog() {
+  if (activityLog.length === 0) {
+    alert("No activities to export!");
+    return;
+  }
+  let text = "User Activity Log:\n\n";
+  activityLog.forEach((entry, i) => {
+    text += `${i+1}. [${entry.time}] ${entry.type} on <${entry.target}>\n`;
+  });
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "activity_log.txt";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+  <style>
+    body { font-family: Arial, sans-serif; }
+    form { width: 500px; }
+    .question { margin-bottom: 15px; }
+    .error { color: red; font-size: 12px; }
+    button { padding: 8px 12px; }
+  </style>
+</head>
+<body>
+
+<h2> Survey</h2>
+<div id="surveyContainer"></div>
+
+<script>
+  const questions = [
+    { text: "What is your name?", type: "text", required: true, maxLength: 50 },
+    { text: "Gender", type: "radio", options: ["Male", "Female", "Other"], required: true },
+    { text: "Select your hobbies", type: "checkbox", options: ["Reading", "Sports", "Music"], required: true, minSelect: 1, maxSelect: 2 },
+    { text: "Any additional comments?", type: "text", required: false, maxLength: 100 }
+  ];
+
+  const container = document.getElementById("surveyContainer");
+  const form = document.createElement("form");
+  container.appendChild(form);
+
+  questions.forEach((q, index) => {
+    const div = document.createElement("div");
+    div.className = "question";
+    div.id = "q" + index;
+
+    const label = document.createElement("label");
+    label.innerText = q.text + (q.required ? " *" : "");
+    div.appendChild(label);
+    div.appendChild(document.createElement("br"));
+
+    if (q.type === "text") {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.maxLength = q.maxLength || "";
+      input.id = "q" + index + "_input";
+      div.appendChild(input);
+    } else if (q.type === "radio") {
+      q.options.forEach((opt, i) => {
+        const r = document.createElement("input");
+        r.type = "radio";
+        r.name = "q" + index;
+        r.value = opt;
+        r.id = "q" + index + "_radio" + i;
+        const rLabel = document.createElement("label");
+        rLabel.innerText = opt;
+        rLabel.htmlFor = r.id;
+        div.appendChild(r);
+        div.appendChild(rLabel);
+      });
+    } else if (q.type === "checkbox") {
+      q.options.forEach((opt, i) => {
+        const c = document.createElement("input");
+        c.type = "checkbox";
+        c.name = "q" + index;
+        c.value = opt;
+        c.id = "q" + index + "_chk" + i;
+        const cLabel = document.createElement("label");
+        cLabel.innerText = opt;
+        cLabel.htmlFor = c.id;
+        div.appendChild(c);
+        div.appendChild(cLabel);
+      });
+    }
+
+    const errorSpan = document.createElement("span");
+    errorSpan.className = "error";
+    errorSpan.id = "q" + index + "_error";
+    div.appendChild(document.createElement("br"));
+    div.appendChild(errorSpan);
+
+    form.appendChild(div);
+  });
+
+  const submitBtn = document.createElement("button");
+  submitBtn.type = "submit";
+  submitBtn.innerText = "Submit";
+  form.appendChild(submitBtn);
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    let valid = true;
+
+    questions.forEach((q, index) => {
+      const error = document.getElementById("q" + index + "_error");
+      error.innerText = "";
+
+      if (q.type === "text") {
+        const val = document.getElementById("q" + index + "_input").value.trim();
+        if (q.required && val === "") {
+          error.innerText = "This field is required";
+          valid = false;
+        } else if (val.length > (q.maxLength || Infinity)) {
+          error.innerText = "Max " + q.maxLength + " characters allowed";
+          valid = false;
+        }
+      } else if (q.type === "radio") {
+        const selected = form.querySelectorAll('input[name="q'+index+'"]:checked');
+        if (q.required && selected.length === 0) {
+          error.innerText = "Please select an option";
+          valid = false;
+        }
+      } else if (q.type === "checkbox") {
+        const checked = form.querySelectorAll('input[name="q'+index+'"]:checked');
+        if (q.required && checked.length < (q.minSelect || 0)) {
+          error.innerText = "Select at least " + q.minSelect;
+          valid = false;
+        } else if (checked.length > (q.maxSelect || Infinity)) {
+          error.innerText = "Select at most " + q.maxSelect;
+          valid = false;
+        }
+      }
+    });
+
+    if (valid) {
+      alert("Survey submitted successfully!");
+      form.reset();
+    }
+  });
+</script>
+
+</body>
+</html>

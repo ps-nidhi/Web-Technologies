@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Exercise 1 </title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    form {
+      width: 350px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+    }
+
+    button {
+      margin-top: 10px;
+      padding: 8px;
+      width: 100%;
+    }
+
+    span {
+      color: red;
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+  const form = document.createElement("form");
+  document.body.appendChild(form);
+
+  form.innerHTML = `
+    <h2>Adaptive Registration Form</h2>
+
+    <label>Name</label>
+    <input type="text" id="name">
+
+    <label>Email</label>
+    <input type="email" id="email">
+    <span id="emailError"></span>
+
+    <label>Password</label>
+    <input type="password" id="password">
+    <span id="passError"></span>
+
+    <label>Confirm Password</label>
+    <input type="password" id="confirmPassword">
+    <span id="confirmError"></span>
+
+    <label>Age</label>
+    <input type="number" id="age">
+    <span id="ageError"></span>
+
+    <label>Role</label>
+    <select id="role">
+      <option value="">Select Role</option>
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
+      <option value="admin">Admin</option>
+    </select>
+
+    <div id="skillsDiv" style="display:none">
+      <label>Skills</label>
+      <input type="text" id="skills">
+    </div>
+
+    <button type="submit">Register</button>
+  `;
+
+  
+  const role = document.getElementById("role");
+  const email = document.getElementById("email");
+  const password = document.getElementById("password");
+  const confirmPassword = document.getElementById("confirmPassword");
+  const age = document.getElementById("age");
+  const skillsDiv = document.getElementById("skillsDiv");
+
+  
+  function validateEmail(roleValue) {
+    if (roleValue === "admin" && !email.value.endsWith("@company.com")) {
+      email.style.border = "2px solid red";
+      emailError.innerText = " Admin email must end with @company.com";
+      return false;
+    }
+
+    email.style.border = "2px solid green";
+    emailError.innerText = "";
+    return true;
+  }
+
+  function validatePassword(roleValue) {
+    const pass = password.value;
+
+    if (roleValue === "admin") {
+      const strongPassword =
+        pass.length >= 8 &&
+        /[A-Z]/.test(pass) &&
+        /[0-9]/.test(pass) &&
+        /[@$!%*?&]/.test(pass);
+
+      if (!strongPassword) {
+        password.style.border = "2px solid red";
+        passError.innerText = " Strong password required";
+        return false;
+      }
+    } else {
+      if (pass.length < 6) {
+        password.style.border = "2px solid red";
+        passError.innerText = " Minimum 6 characters required";
+        return false;
+      }
+    }
+
+    password.style.border = "2px solid green";
+    passError.innerText = "";
+    return true;
+  }
+
+  function validateConfirmPassword() {
+    if (password.value !== confirmPassword.value) {
+      confirmPassword.style.border = "2px solid red";
+      confirmError.innerText = " Passwords do not match";
+      return false;
+    }
+
+    confirmPassword.style.border = "2px solid green";
+    confirmError.innerText = "";
+    return true;
+  }
+
+  function validateAge(roleValue) {
+    const minAge = {
+      student: 16,
+      teacher: 21,
+      admin: 25
+    };
+
+    if (age.value < minAge[roleValue]) {
+      age.style.border = "2px solid red";
+      ageError.innerText = ` Minimum age is ${minAge[roleValue]}`;
+      return false;
+    }
+
+    age.style.border = "2px solid green";
+    ageError.innerText = "";
+    return true;
+  }
+
+  
+  role.addEventListener("change", function () {
+    skillsDiv.style.display =
+      role.value === "teacher" ? "block" : "none";
+  });
+
+  
+  form.addEventListener("input", function () {
+    if (!role.value) return;
+
+    validateEmail(role.value);
+    validatePassword(role.value);
+    validateConfirmPassword();
+    validateAge(role.value);
+  });
+
+  
+  form.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const isValid =
+      validateEmail(role.value) &&
+      validatePassword(role.value) &&
+      validateConfirmPassword() &&
+      validateAge(role.value);
+
+    if (isValid) {
+      alert("Registration Successful!");
+      form.reset();
+      skillsDiv.style.display = "none";
+    }
+  });
+</script>
+
+</body>
+</html>
