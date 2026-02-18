@@ -1,0 +1,7 @@
+{
+  "products": [
+    { "id": "P001", "name": "Laptop", "category": "Electronics", "price": 1200, "stock": 10 },
+    { "id": "P002", "name": "Chair", "category": "Furniture", "price": 150, "stock": 5 },
+    { "id": "P003", "name": "Pen", "category": "Stationery", "price": 2, "stock": 100 }
+  ]
+}

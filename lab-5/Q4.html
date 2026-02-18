@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Inventory System </title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            padding: 6px;
+            margin: 4px;
+        }
+
+        button {
+            padding: 6px 12px;
+            margin: 4px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .low-stock {
+            background-color: #fdd;
+        }
+
+        .success { color: green; }
+        .error { color: red; }
+
+        #totalValue {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <h2>Product Inventory System</h2>
+
+    <div id="message"></div>
+
+    <input type="text" id="productId" placeholder="Product ID">
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="category" placeholder="Category">
+    <input type="number" id="price" placeholder="Price">
+    <input type="number" id="stock" placeholder="Stock">
+    <button onclick="addProduct()">Add Product</button>
+
+    <br><br>
+    <input type="text" id="searchCategory" placeholder="Search by Category" onkeyup="searchByCategory()">
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+    </table>
+
+    <div id="totalValue"></div>
+</div>
+
+<script>
+    let products = [];
+    let editMode = false;
+
+    
+    function fetchProducts() {
+        fetch("inventory.json")
+            .then(response => {
+                if (!response.ok) throw new Error("Failed to load JSON");
+                return response.json();
+            })
+            .then(data => {
+                products = data.products;
+                displayProducts();
+            })
+            .catch(error => showMessage(error.message, "error"));
+    }
+
+    function displayProducts(filteredProducts = null) {
+        const table = document.getElementById("productTable");
+        table.innerHTML = "";
+
+        const list = filteredProducts || products;
+
+        list.forEach(product => {
+            const row = document.createElement("tr");
+            if (product.stock < 5) row.classList.add("low-stock"); 
+            row.innerHTML = `
+                <td>${product.id}</td>
+                <td>${product.name}</td>
+                <td>${product.category}</td>
+                <td>${product.price}</td>
+                <td>${product.stock}</td>
+                <td>
+                    <button onclick="editProduct('${product.id}')">Edit</button>
+                    <button onclick="deleteProduct('${product.id}')">Delete</button>
+                </td>
+            `;
+            table.appendChild(row);
+        });
+
+        calculateTotal();
+    }
+
+    
+    function addProduct() {
+        const id = document.getElementById("productId").value.trim();
+        const name = document.getElementById("name").value.trim();
+        const category = document.getElementById("category").value.trim();
+        const price = parseFloat(document.getElementById("price").value);
+        const stock = parseInt(document.getElementById("stock").value);
+
+        if (!id || !name || !category || isNaN(price) || isNaN(stock)) {
+            showMessage("All fields must be valid", "error");
+            return;
+        }
+
+        if (editMode) {
+            updateProduct({ id, name, category, price, stock });
+            return;
+        }
+
+        const exists = products.find(p => p.id === id);
+        if (exists) {
+            showMessage("Product ID already exists", "error");
+            return;
+        }
+
+        products.push({ id, name, category, price, stock });
+        displayProducts();
+        showMessage("Product added successfully", "success");
+        clearForm();
+    }
+
+    
+    function editProduct(id) {
+        const product = products.find(p => p.id === id);
+        if (!product) return;
+
+        document.getElementById("productId").value = product.id;
+        document.getElementById("name").value = product.name;
+        document.getElementById("category").value = product.category;
+        document.getElementById("price").value = product.price;
+        document.getElementById("stock").value = product.stock;
+
+        editMode = true;
+    }
+
+    function updateProduct(updated) {
+        const index = products.findIndex(p => p.id === updated.id);
+        if (index === -1) {
+            showMessage("Product not found", "error");
+            return;
+        }
+
+        products[index] = updated;
+        editMode = false;
+        displayProducts();
+        showMessage("Product updated successfully", "success");
+        clearForm();
+    }
+
+    
+    function deleteProduct(id) {
+        const index = products.findIndex(p => p.id === id);
+        if (index === -1) {
+            showMessage("Product not found", "error");
+            return;
+        }
+
+        products.splice(index, 1);
+        displayProducts();
+        showMessage("Product deleted successfully", "success");
+    }
+
+    
+    function searchByCategory() {
+        const query = document.getElementById("searchCategory").value.toLowerCase();
+        const filtered = products.filter(p => p.category.toLowerCase().includes(query));
+        displayProducts(filtered);
+    }
+
+    // TOTAL INVENTORY VALUE
+    function calculateTotal() {
+        const total = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+        document.getElementById("totalValue").textContent = `Total Inventory Value: $${total.toFixed(2)}`;
+    }
+
+    function showMessage(msg, type) {
+        const messageDiv = document.getElementById("message");
+        messageDiv.textContent = msg;
+        messageDiv.className = type;
+        setTimeout(() => messageDiv.textContent = "", 3000);
+    }
+
+    function clearForm() {
+        document.getElementById("productId").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("category").value = "";
+        document.getElementById("price").value = "";
+        document.getElementById("stock").value = "";
+    }
+
+    fetchProducts(); 
+</script>
+
+</body>
+</html>
