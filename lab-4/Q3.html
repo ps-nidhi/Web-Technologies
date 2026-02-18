@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Management System</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            margin: 5px;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Student Management System </h2>
+
+    <div id="message"></div>
+
+    <form id="studentForm">
+        <input type="text" id="studentId" placeholder="Student ID" required>
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="text" id="department" placeholder="Department" required>
+        <input type="number" id="marks" placeholder="Marks" required>
+        <button type="submit">Save Student</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Marks</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="studentTable"></tbody>
+    </table>
+</div>
+
+<script>
+    const form = document.getElementById("studentForm");
+    const table = document.getElementById("studentTable");
+    const messageDiv = document.getElementById("message");
+
+    let students = [];
+    let editMode = false;
+
+    // READ (Fetch Students)
+    function fetchStudents() {
+        fetch("students.json")
+            .then(response => {
+                if (!response.ok) throw { status: response.status };
+                return response.json();
+            })
+            .then(data => {
+                students = data.students;
+                displayStudents();
+            })
+            .catch(error => handleError(error.status));
+    }
+
+    function displayStudents() {
+        table.innerHTML = "";
+
+        students.forEach(student => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${student.id}</td>
+                <td>${student.name}</td>
+                <td>${student.department}</td>
+                <td>${student.marks}</td>
+                <td>
+                    <button onclick="editStudent('${student.id}')">Edit</button>
+                    <button onclick="deleteStudent('${student.id}')">Delete</button>
+                </td>
+            `;
+
+            table.appendChild(row);
+        });
+    }
+
+    // CREATE / UPDATE
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const id = document.getElementById("studentId").value;
+        const name = document.getElementById("name").value;
+        const department = document.getElementById("department").value;
+        const marks = document.getElementById("marks").value;
+
+        const student = { id, name, department, marks };
+
+        if (editMode) {
+            updateStudent(student);
+        } else {
+            createStudent(student);
+        }
+
+        form.reset();
+    });
+
+    function createStudent(student) {
+        const exists = students.find(s => s.id === student.id);
+
+        if (exists) {
+            showMessage("Student ID already exists (404 simulation)", "error");
+            return;
+        }
+
+        students.push(student);
+        displayStudents();
+        showMessage("Student added successfully (200 OK)", "success");
+    }
+
+    function editStudent(id) {
+        const student = students.find(s => s.id === id);
+
+        document.getElementById("studentId").value = student.id;
+        document.getElementById("name").value = student.name;
+        document.getElementById("department").value = student.department;
+        document.getElementById("marks").value = student.marks;
+
+        editMode = true;
+    }
+
+    function updateStudent(updatedStudent) {
+        const index = students.findIndex(s => s.id === updatedStudent.id);
+
+        if (index === -1) {
+            showMessage("Student not found (404)", "error");
+            return;
+        }
+
+        students[index] = updatedStudent;
+        editMode = false;
+        displayStudents();
+        showMessage("Student updated successfully (200 OK)", "success");
+    }
+
+    function deleteStudent(id) {
+        const index = students.findIndex(s => s.id === id);
+
+        if (index === -1) {
+            showMessage("Student not found (404)", "error");
+            return;
+        }
+
+        students.splice(index, 1);
+        displayStudents();
+        showMessage("Student deleted successfully (200 OK)", "success");
+    }
+
+    function showMessage(msg, type) {
+        messageDiv.textContent = msg;
+        messageDiv.className = type;
+        setTimeout(() => messageDiv.textContent = "", 3000);
+    }
+
+    function handleError(status) {
+        if (status === 404) {
+            showMessage("404 - Resource Not Found", "error");
+        } else {
+            showMessage("500 - Server Error", "error");
+        }
+    }
+
+    fetchStudents(); // Initial load
+</script>
+
+</body>
+</html>
