@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Online Book Finder</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, select { margin: 5px 0; padding: 5px; width: 300px; }
+        button { padding: 5px 10px; margin: 5px 0; }
+        .book { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .book h3 { margin: 0; }
+    </style>
+</head>
+<body>
+    <h1>Online Book Finder</h1>
+
+    <h2>Search Books by Title</h2>
+    <input type="text" id="searchTitle" placeholder="Enter book title">
+    <button onclick="searchBooks()">Search</button>
+
+    <h2>Filter by Category</h2>
+    <select id="categorySelect" onchange="filterByCategory()">
+        <option value="">--Select Category--</option>
+        <option value="Programming">Programming</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Science">Science</option>
+        <option value="History">History</option>
+    </select>
+
+    <h2>Sort Books</h2>
+    <button onclick="sortBooks('price')">Sort by Price</button>
+    <button onclick="sortBooks('rating')">Sort by Rating</button>
+
+    <h2>Top Rated Books</h2>
+    <button onclick="topRated()">Show Top Rated</button>
+
+    <h2>Book List</h2>
+    <div id="booksContainer"></div>
+    <button onclick="loadMore()">Load More</button>
+
+<script>
+const apiUrl = "http://localhost:3000/books";
+let currentPage = 1;
+
+function renderBooks(books, append = false) {
+    const container = document.getElementById("booksContainer");
+    if (!append) container.innerHTML = "";
+    books.forEach(book => {
+        const bookDiv = document.createElement("div");
+        bookDiv.className = "book";
+        bookDiv.innerHTML = `
+            <h3>${book.title}</h3>
+            <p>Author: ${book.author}</p>
+            <p>Category: ${book.category}</p>
+            <p>Price: ₹${book.price}</p>
+            <p>Rating: ${book.rating}</p>
+            <p>Year: ${book.year}</p>
+        `;
+        container.appendChild(bookDiv);
+    });
+}
+
+function searchBooks() {
+    const title = document.getElementById("searchTitle").value;
+    fetch(`${apiUrl}/search?title=${title}`)
+        .then(res => res.json())
+        .then(data => renderBooks(data));
+}
+
+function filterByCategory() {
+    const category = document.getElementById("categorySelect").value;
+    if (!category) return loadMore();
+    fetch(`${apiUrl}/category/${category}`)
+        .then(res => res.json())
+        .then(data => renderBooks(data));
+}
+
+function sortBooks(field) {
+    fetch(`${apiUrl}/sort/${field}`)
+        .then(res => res.json())
+        .then(data => renderBooks(data));
+}
+
+function topRated() {
+    fetch(`${apiUrl}/top`)
+        .then(res => res.json())
+        .then(data => renderBooks(data));
+}
+
+function loadMore() {
+    fetch(`${apiUrl}?page=${currentPage}`)
+        .then(res => res.json())
+        .then(data => {
+            renderBooks(data, currentPage > 1);
+            currentPage++;
+        });
+}
+
+loadMore();
+</script>
+</body>
+</html>

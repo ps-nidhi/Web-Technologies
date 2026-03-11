@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Notes Manager</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, textarea { display: block; margin: 10px 0; width: 300px; padding: 5px; }
+        button { padding: 5px 10px; margin: 5px 0; }
+        .note { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; }
+        .note h3 { margin: 0; }
+        .note button { margin-right: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Student Notes Manager</h1>
+
+    <h2>Add Note</h2>
+    <input type="text" id="title" placeholder="Title">
+    <input type="text" id="subject" placeholder="Subject">
+    <textarea id="description" placeholder="Description"></textarea>
+    <button onclick="addNote()">Add Note</button>
+
+    <h2>All Notes</h2>
+    <div id="notesContainer"></div>
+
+<script>
+const apiUrl = "http://localhost:3000/notes";
+
+function addNote() {
+    const title = document.getElementById("title").value;
+    const subject = document.getElementById("subject").value;
+    const description = document.getElementById("description").value;
+
+    if (!title || !subject || !description) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, subject, description })
+    })
+    .then(res => res.json())
+    .then(() => {
+        document.getElementById("title").value = "";
+        document.getElementById("subject").value = "";
+        document.getElementById("description").value = "";
+        loadNotes();
+    });
+}
+
+function loadNotes() {
+    fetch(apiUrl)
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById("notesContainer");
+        container.innerHTML = "";
+        data.forEach(note => {
+            const noteDiv = document.createElement("div");
+            noteDiv.className = "note";
+            noteDiv.innerHTML = `
+                <h3>${note.title} (${note.subject})</h3>
+                <p>${note.description}</p>
+                <button onclick="editNote('${note._id}', '${note.title}', '${note.description}')">Edit</button>
+                <button onclick="deleteNote('${note._id}')">Delete</button>
+            `;
+            container.appendChild(noteDiv);
+        });
+    });
+}
+
+function deleteNote(id) {
+    fetch(`${apiUrl}/${id}`, { method: "DELETE" })
+    .then(() => loadNotes());
+}
+
+function editNote(id, oldTitle, oldDescription) {
+    const newTitle = prompt("Edit Title:", oldTitle);
+    if (newTitle === null) return;
+    const newDescription = prompt("Edit Description:", oldDescription);
+    if (newDescription === null) return;
+
+    fetch(`${apiUrl}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: newTitle, description: newDescription })
+    })
+    .then(() => loadNotes());
+}
+
+loadNotes();
+</script>
+</body>
+</html>
