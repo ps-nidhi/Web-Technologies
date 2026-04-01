@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Object Example</title>
+</head>
+<body>
+
+    <h2>Enter Student Details</h2>
+
+    <input id="id" type="number" placeholder="Enter ID"><br><br>
+    <input id="name" placeholder="Enter Name"><br><br>
+    <input id="department" placeholder="Enter Department"><br><br>
+    <input id="marks" type="number" placeholder="Enter Marks"><br><br>
+
+    <button onclick="createStudent()">Submit</button>
+
+    <h2>Student Details</h2>
+    <p id="output"></p>
+
+    <script>
+        const getGrade = (marks) => {
+            if (marks >= 90) return "A";
+            else if (marks >= 75) return "B";
+            else if (marks >= 60) return "C";
+            else return "D";
+        };
+
+        function createStudent() {
+            // Take input from user
+            const student = {
+                id: Number(document.getElementById("id").value),
+                name: document.getElementById("name").value,
+                department: document.getElementById("department").value,
+                marks: Number(document.getElementById("marks").value)
+            };
+
+            // Destructuring
+            const { id, name, department, marks } = student;
+
+            // Spread operator
+            const updatedStudent = {
+                ...student,
+                grade: getGrade(marks)
+            };
+
+            // Display output
+            document.getElementById("output").innerHTML = `
+                <strong>Destructured Values:</strong><br>
+                ${id} ${name} ${department} ${marks} <br><br>
+
+                <strong>Updated Student Object:</strong><br>
+                ${JSON.stringify(updatedStudent)}
+            `;
+
+            // Console output
+            console.log(id, name, department, marks);
+            console.log(updatedStudent);
+        }
+    </script>
+
+</body>
+</html>
